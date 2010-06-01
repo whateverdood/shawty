@@ -1,9 +1,11 @@
 package com.google.shawty;
 
-import groovy.util.GroovyTestCase;
+import org.junit.Test
+import static org.junit.Assert.*
 
-class XPathExtractorTests extends GroovyTestCase {
+class XPathExtractorTests {
     
+    @Test
     void testExtract() {
         
         def xml = '''<Inventory>
@@ -41,6 +43,7 @@ class XPathExtractorTests extends GroovyTestCase {
         assertTrue "Invalid text: ${actual}", expected.text.contains(actual.text[0..10])
     }
     
+    @Test
     void testExtractsRss() {
         
         def xml = '''<rss version="2.0" 
@@ -108,6 +111,7 @@ class XPathExtractorTests extends GroovyTestCase {
         assertEquals "Invalid isbn: ${actual}", expected1.isbn, actual.isbn        
     }
     
+    @Test
     void testExtractsAtom() {
         // requires atom.xml on the classpath *sigh*
         def forEach = "/feed/entry"

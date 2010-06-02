@@ -14,11 +14,14 @@ desc "The Shawty text extractor."
 
 #local_task :test_groovies
 
+Java.classpath << "junit:junit:jar:4.8.1"
+
 define "shawty" do
-  compile.with 'junit:junit:jar:4.8.1'
+  #compile.with 'junit:junit:jar:4.8.1'
   manifest["Implementation-Vendor"] = COPYRIGHT
   project.version = VERSION_NUMBER
   project.group = GROUP
   test.resources
-  test.with 'junit:junit:jar:4.8.1'
+  #test.include 'com.google.shawty.*'
+  #test.using :junit4 => true
 end

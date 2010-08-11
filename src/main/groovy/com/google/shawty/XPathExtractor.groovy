@@ -65,7 +65,7 @@ class XPathExtractor {
         Transformer transformer = TransformerFactory.newInstance().newTransformer()
         DOMResult result = new DOMResult()
         transformer.transform(new SAXSource(reader, 
-        new InputSource(new ByteArrayInputStream(string.bytes))), result)
+            new InputSource(new ByteArrayInputStream(string.bytes))), result)
         result.node
     }
     
@@ -78,8 +78,7 @@ class XPathExtractor {
         
         final ns = namespaces
         
-        xpath.setNamespaceContext([getNamespaceURI: { 
-            prefix ->
+        xpath.setNamespaceContext([getNamespaceURI: {  prefix ->
             ns.get(prefix)
         }, 
         getPrefix: { namespaceURI ->
@@ -96,25 +95,26 @@ class XPathExtractor {
     }
     
     /**
-     * Do it, first looking for a String and falling back on a NodeSet if
-     * necessary.
+     * Extract the XPath text contents, first looking for both String values as well as NodeSet
      * @param xpath The XPath used.
      * @param path The path to evaluate.
      * @param node The DOM node to search
      * @return
      */
     def evaluate(xpath, path, node) {
-        def value = xpath.evaluate(path, node)?.trim()
+        def values = new HashSet()
+        values << xpath.evaluate(path, node)?.trim()
         
-        if (!value || "".equals(value)) {
+        try {
             def nodes = xpath.evaluate(path, node, XPathConstants.NODESET)
             for (def i = 0; i < nodes.length; i++) {
                 def n = nodes.item(i)
-                value += n.textContent?.trim() ?: " "
+                values << n.textContent?.trim()
             }
+        } catch (Exception ignored) {
         }
         
-        value
+        values.join " "
     }
     
 }

@@ -35,12 +35,15 @@ class XPathExtractorTests {
         def expected = ["title": "Snow Crash", 
             "author": "Neal Stephenson", 
             "isbn": "0553380958", 
-            "text": "Snow Crash Neal Stephenson 0553380958 14.95"]
+            "text": ["Snow Crash", "Neal Stephenson", "0553380958", "14.95"]]
         
         assertEquals "Invalid title: ${actual}", expected.title, actual.title
         assertEquals "Invalid author: ${actual}", expected.author, actual.author
         assertEquals "Invalid isbn: ${actual}", expected.isbn, actual.isbn
-        assertTrue "Invalid text: ${actual}", expected.text.contains(actual.text[0..10])
+        
+        expected.text.each { bit ->
+            assertTrue "Invalid text: ${actual}", actual.text.contains(bit)
+        }
     }
     
     @Test

@@ -116,17 +116,50 @@ class XPathExtractorTests {
     
     @Test
     void testExtractsAtom() {
-        // requires atom.xml on the classpath *sigh*
-        def forEach = "/feed/entry"
-        def xpaths = ["title": "title[type='text']", 
-            "author": "author/name", 
-            "published": "published", 
-            "content": "content"]
         
-        XPathExtractor extractor = new XPathExtractor(forEach: forEach, fieldMappings: xpaths)
-        def actuals = extractor.extract(extractor.class.classLoader.getResourceAsStream("atom.xml").text)
+        def feed = '''<?xml version="1.0" encoding="utf-8"?>
+            <feed xmlns="http://www.w3.org/2005/Atom">
+                <title>Example Feed</title>
+                <subtitle>A subtitle.</subtitle>
+                <link href="http://example.org/feed/" rel="self" />
+                <link href="http://example.org/" />
+                <id>urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6</id>
+                <updated>2003-12-13T18:30:02Z</updated>
+                <author>
+                    <name>John Doe</name>
+                    <email>johndoe@example.com</email>
+                </author>
+                <entry>
+                    <title>Atom-Powered Robots Run Amok</title>
+                    <link href="http://example.org/2003/12/13/atom03" />
+                    <link rel="alternate" type="text/html" href="http://example.org/2003/12/13/atom03.html"/>
+                    <link rel="edit" href="http://example.org/2003/12/13/atom03/edit"/>
+                    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                    <updated>2003-12-13T18:30:02Z</updated>
+                    <summary>Some text.</summary>
+                </entry>
+                <entry>
+                    <title>Foo</title>
+                    <link href="http://example.org/2003/12/14/foo" />
+                    <link rel="alternate" type="text/html" href="http://example.org/2003/12/14/foo.html"/>
+                    <link rel="edit" href="http://example.org/2003/12/14/foo/edit"/>
+                    <id>urn:uuid:1225c695-cfb8-4ebb-bbbb-80da344efa6a</id>
+                    <updated>2003-12-14T18:30:02Z</updated>
+                    <summary>Some different text.</summary>
+                </entry>
+            </feed>'''
         
-        assertEquals "Wrong number of entries extracted", 19, actuals.size()
+        def forEach = "/atom:feed/atom:entry"
+        def xpaths = ["title": "atom:title[type='text']", 
+            "author": "atom:author/atom:name", 
+            "published": "atom:published", 
+            "content": "atom:content"]
+        def namespaces = ["atom": "http://www.w3.org/2005/Atom"]
+        
+        XPathExtractor extractor = new XPathExtractor(forEach: forEach, fieldMappings: xpaths, namespaces: namespaces)
+        def actuals = extractor.extract(feed)
+        
+        assertEquals "Wrong number of entries extracted", 2, actuals.size()
         // TODO: add more assertions
     }
     

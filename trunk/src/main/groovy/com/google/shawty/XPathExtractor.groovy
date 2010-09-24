@@ -26,7 +26,7 @@ class XPathExtractor {
         
         def extracts = []
         
-        def dom = toDom(stripDefaultNamespace(string))
+        def dom = toDom(stripEmptyNamespace(string))
         def xpath = newNSAwareXPath()
         
         def docs = xpath.evaluate(forEach, dom, XPathConstants.NODESET)
@@ -50,6 +50,16 @@ class XPathExtractor {
      */
     def stripDefaultNamespace(string) {
         string.replaceAll(/xmlns *= *["'].[^"'>]*["']/, "")
+    }
+    
+    
+    /**
+     * Removes the default xml namespace if one exists b/c XPath is dumb.
+     * @param string
+     * @return
+     */
+    def stripEmptyNamespace(string) {
+        string.replaceAll(/xmlns *= *["']["']/, "")
     }
     
     /**

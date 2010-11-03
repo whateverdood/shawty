@@ -1,5 +1,7 @@
 package com.google.shawty;
 
+
+import org.ccil.cowan.tagsoup.Parser;
 import org.junit.Test
 import static org.junit.Assert.*
 
@@ -161,6 +163,33 @@ class XPathExtractorTests {
         
         assertEquals "Wrong number of entries extracted", 2, actuals.size()
         // TODO: add more assertions
+    }
+    
+    /**
+     * Use Tagsoup to transform HTML into XHTML so we can extract some
+     * interesting texts.
+     */
+    @Test
+    public void textExtractsHtml() throws Exception {
+        def namespaces = ["html": "http://www.w3.org/1999/xhtml"]
+        def forEach = "//html:div[@id='content']/html:p"
+        def xpaths = ["title": "html:b/text()",
+            "content": "descendant::text()"]
+        
+        def extractor = new XPathExtractor(namespaces: namespaces,
+            forEach: forEach, fieldMappings: xpaths,
+            xmlReaderClazz: "org.ccil.cowan.tagsoup.Parser")
+        
+        StringWriter transformed = new StringWriter()
+        
+        URL resource = this.class.getResource("/The_Bible:Leviticus_14.html")
+        def extracted = extractor.extract(resource.text)
+
+        assertTrue "Should have extracted at least one field set.", extracted.size() > 0
+
+        extracted.each { extract ->
+            println "$extract"
+        }        
     }
     
 }

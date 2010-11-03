@@ -5,7 +5,7 @@ how to use Shawty's XPathExtractor see XPathExtractorTests.groovy.
 
 Dependencies
 ============
-Groovy 1.6 or later and Buildr 1.4 or later.
+Java 5+, Groovy 1.6+ and Buildr 1.4+.
 
 Build
 =====

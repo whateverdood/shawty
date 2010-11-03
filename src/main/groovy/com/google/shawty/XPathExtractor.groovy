@@ -16,17 +16,50 @@ import javax.xml.xpath.*;
 
 class XPathExtractor {
     
-    def forEach = "/" // sensible null-safe default?
+    /**
+     * Required - XPath expression that should produce a list of nodes that can 
+     * be iterated over.  If the document doesn't have a collection then just
+     * set this "/". 
+     */
+    def forEach = "/"
     
+    /**
+     * Required - map/table of fields and the XPath expressions that will be
+     * used to populate them.
+     */
     def fieldMappings = [:]
     
+    /**
+     * Optional - if your document tags are namespace'd then define them in this
+     * map.
+     */
     def namespaces = [:]
     
-    List extract(string) {
+    /**
+     * A list of components that massage the input prior to extraction.
+     */
+    def preprocessors = []
+    
+    /**
+     * An implementation of XMLReader that may be specified if you don't want to
+     * use the built-in JRE impl.
+     */
+    def xmlReaderClazz
+    
+    /**
+     * Extracts a list of maps, populated based on fieldMapping rules and such.
+     * @param string
+     * @return
+     */
+    List extract(input) {
         
         def extracts = []
         
-        def dom = toDom(stripEmptyNamespace(string))
+        preprocessors.each { pp ->
+            input = pp.process(input)
+        }
+        
+        def dom = toDom(input)
         def xpath = newNSAwareXPath()
         
         def docs = xpath.evaluate(forEach, dom, XPathConstants.NODESET)
@@ -44,39 +77,32 @@ class XPathExtractor {
     }
     
     /**
-     * Removes the default xml namespace if one exists b/c XPath is dumb.
-     * @param string
-     * @return
-     */
-    def stripDefaultNamespace(string) {
-        string.replaceAll(/xmlns *= *["'].[^"'>]*["']/, "")
-    }
-    
-    
-    /**
-     * Removes the default xml namespace if one exists b/c XPath is dumb.
-     * @param string
-     * @return
-     */
-    def stripEmptyNamespace(string) {
-        string.replaceAll(/xmlns *= *["']["']/, "")
-    }
-    
-    /**
      * Generate a DOM object graph from the supplied xml.
      * @param string The string of hopefully well-formed xml.
      * @return The top-level DOM node.
      */
     org.w3c.dom.Node toDom(string) {
-        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance()
-        saxParserFactory.setNamespaceAware(true)
-        XMLReader reader = saxParserFactory.newSAXParser().getXMLReader()
-        
         Transformer transformer = TransformerFactory.newInstance().newTransformer()
+        XMLReader reader = getXmlReader()
         DOMResult result = new DOMResult()
         transformer.transform(new SAXSource(reader, 
             new InputSource(new ByteArrayInputStream(string.bytes))), result)
         result.node
+    }
+    
+    /**
+     * Get an XMLReader impl, using the JRE built-in if xmlReaderClazz is not set. 
+     * @return An XMLReader
+     */
+    XMLReader getXmlReader() {
+        if (xmlReaderClazz) {
+            return Class.forName(xmlReaderClazz).newInstance()
+        } else {
+            SAXParserFactory saxParserFactory = SAXParserFactory.newInstance()
+            saxParserFactory.setNamespaceAware(true)
+            saxParserFactory.setValidating(false)
+            return saxParserFactory.newSAXParser().getXMLReader()
+        }
     }
     
     /**
@@ -101,7 +127,8 @@ class XPathExtractor {
         getPrefixes: { namespaceURI ->
             return [getPrefix(namespaceURI)]
         }] as NamespaceContext)
-        xpath
+
+        return xpath
     }
     
     /**
@@ -121,10 +148,9 @@ class XPathExtractor {
                 def n = nodes.item(i)
                 values << n.textContent?.trim()
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         
-        values.join " "
+        return values.join(" ")
     }
     
 }

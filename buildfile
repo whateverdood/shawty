@@ -8,10 +8,8 @@ desc "The Shawty text extractor."
 
 require 'buildr/groovy'
 
-# If I don't do this test.compile fails :( 
-#Java.classpath << "junit:junit:jar:4.8.1"
-
 define "shawty" do
+  compile.with 'org.ccil.cowan.tagsoup:tagsoup:jar:1.2'
   manifest["Implementation-Vendor"] = COPYRIGHT
   project.version = VERSION_NUMBER
   project.group = GROUP

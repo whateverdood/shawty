@@ -166,15 +166,14 @@ class XPathExtractorTests {
     }
     
     /**
-     * Use Tagsoup to transform HTML into XHTML so we can extract some
-     * interesting texts.
+     * Use Tagsoup to transform "extreme" HTML into XHTML so we can extract
+     * all paragraph content.
      */
     @Test
     public void textExtractsHtml() throws Exception {
         def namespaces = ["html": "http://www.w3.org/1999/xhtml"]
-        def forEach = "//html:div[@id='content']/html:p"
-        def xpaths = ["title": "html:b/text()",
-            "content": "descendant::text()"]
+        def forEach = "//html:p"
+        def xpaths = ["content": "text()"]
         
         def extractor = new XPathExtractor(namespaces: namespaces,
             forEach: forEach, fieldMappings: xpaths,
@@ -182,14 +181,13 @@ class XPathExtractorTests {
         
         StringWriter transformed = new StringWriter()
         
-        URL resource = this.class.getResource("/The_Bible:Leviticus_14.html")
+        URL resource = this.class.getResource("/extreme.html")
         def extracted = extractor.extract(resource.text)
-
-        assertTrue "Should have extracted at least one field set.", extracted.size() > 0
-
-        extracted.each { extract ->
-            println "$extract"
-        }        
+        
+        assertEquals("Incorrect # of extracted field sets", 1, extracted.size())
+        assertEquals("Incorrect extracted text", '''ABC  xyz
+QRS''', 
+            extracted.get(0).get("content"))
     }
     
 }

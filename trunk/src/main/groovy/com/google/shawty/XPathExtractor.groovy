@@ -2,6 +2,8 @@ package com.google.shawty;
 
 import java.util.List;
 
+import org.apache.commons.jxpath.JXPathContext;
+import org.apache.commons.jxpath.Pointer;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
@@ -55,24 +57,26 @@ class XPathExtractor {
         
         def extracts = []
         
-        preprocessors.each { pp ->
-            input = pp.process(input)
+        JXPathContext rootContext = JXPathContext.newContext(toDom(input))
+
+        namespaces.each { prefix, uri -> 
+            rootContext.registerNamespace(prefix, uri)
         }
         
-        def dom = toDom(input)
-        def xpath = newNSAwareXPath()
-        
-        def docs = xpath.evaluate(forEach, dom, XPathConstants.NODESET)
-        
-        docs.length.times { i ->
-            def doc = docs.item(i)
+        for (Pointer pointer : rootContext.iteratePointers(forEach)) {
+            JXPathContext xpath = JXPathContext.newContext(
+                rootContext, pointer.getNode())
+            xpath.setLenient(true)
+            
             def extract = [:]
-            fieldMappings.each { field, path ->
-                extract.put(field, evaluate(xpath, path, doc)?.trim())
+            fieldMappings.each { field, xPathExpr ->
+                extract.put(field, 
+                    xpath.iterate(xPathExpr)?.toList()?.join(' ')?.trim())
             }
+            
             extracts << extract
         }
-        
+    
         extracts
     }
     
@@ -87,7 +91,7 @@ class XPathExtractor {
         DOMResult result = new DOMResult()
         transformer.transform(new SAXSource(reader, 
             new InputSource(new ByteArrayInputStream(string.bytes))), result)
-        result.node
+        return result.node
     }
     
     /**
@@ -103,54 +107,6 @@ class XPathExtractor {
             saxParserFactory.setValidating(false)
             return saxParserFactory.newSAXParser().getXMLReader()
         }
-    }
-    
-    /**
-     * Creates a new XPath that uses the supplied namespace info.
-     * @return
-     */
-    XPath newNSAwareXPath() {
-        def xpath = XPathFactory.newInstance().newXPath()
-        
-        final ns = namespaces
-        
-        xpath.setNamespaceContext([getNamespaceURI: {  prefix ->
-            ns.get(prefix)
-        }, 
-        getPrefix: { namespaceURI ->
-            ns.each { key, value ->
-                if (namespaceURI == value) {
-                    return key
-                }
-            }
-        }, 
-        getPrefixes: { namespaceURI ->
-            return [getPrefix(namespaceURI)]
-        }] as NamespaceContext)
-
-        return xpath
-    }
-    
-    /**
-     * Extract the XPath text contents, first looking for both String values as well as NodeSet
-     * @param xpath The XPath used.
-     * @param path The path to evaluate.
-     * @param node The DOM node to search
-     * @return
-     */
-    def evaluate(xpath, path, node) {
-        def values = new HashSet()
-        values << xpath.evaluate(path, node)?.trim()
-        
-        try {
-            def nodes = xpath.evaluate(path, node, XPathConstants.NODESET)
-            for (def i = 0; i < nodes.length; i++) {
-                def n = nodes.item(i)
-                values << n.textContent?.trim()
-            }
-        } catch (Exception ignored) {}
-        
-        return values.join(" ")
     }
     
 }

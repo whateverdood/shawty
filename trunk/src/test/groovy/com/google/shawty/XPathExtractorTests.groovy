@@ -25,9 +25,10 @@ class XPathExtractorTests {
             "author": "Author",
             "isbn": "ISBN",
             "published": "@year",
-            "text": "descendant::text()"]
+            "content": "descendant::text()"]
         
-        XPathExtractor extractor = new XPathExtractor(forEach: forEach, fieldMappings: xpaths)
+        XPathExtractor extractor = new XPathExtractor(
+            forEach: forEach, fieldMappings: xpaths)
         def actuals = extractor.extract(xml)
         
         assertEquals "One set of fields should have been parsed out.", 1, actuals.size()
@@ -37,14 +38,14 @@ class XPathExtractorTests {
         def expected = ["title": "Snow Crash", 
             "author": "Neal Stephenson", 
             "isbn": "0553380958", 
-            "text": ["Snow Crash", "Neal Stephenson", "0553380958", "14.95"]]
+            "content": ["Snow Crash", "Neal Stephenson", "0553380958", "14.95"]]
         
         assertEquals "Invalid title: ${actual}", expected.title, actual.title
         assertEquals "Invalid author: ${actual}", expected.author, actual.author
         assertEquals "Invalid isbn: ${actual}", expected.isbn, actual.isbn
         
-        expected.text.each { bit ->
-            assertTrue "Invalid text: ${actual}", actual.text.contains(bit)
+        expected.content.each { bit ->
+            assertTrue "Invalid text: ${actual}", actual.content.contains(bit)
         }
     }
     

@@ -1,4 +1,4 @@
-VERSION_NUMBER = "0.9.2"
+VERSION_NUMBER = "0.9.3"
 GROUP = "shawty"
 COPYRIGHT = "Covered by the Apache Software License"
 

@@ -1,20 +1,18 @@
 package com.googlecode.shawty;
 
-import java.util.List;
+import java.util.List
 
-import org.apache.commons.jxpath.JXPathContext;
-import org.apache.commons.jxpath.Pointer;
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
+import javax.xml.parsers.SAXParserFactory
+import javax.xml.transform.Transformer
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMResult
+import javax.xml.transform.sax.SAXSource
+import javax.xml.xpath.*
 
-import javax.xml.namespace.NamespaceContext;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.xpath.*;
+import org.apache.commons.jxpath.JXPathContext
+import org.apache.commons.jxpath.Pointer
+import org.xml.sax.InputSource
+import org.xml.sax.XMLReader
 
 class XPathExtractor {
     
@@ -89,8 +87,8 @@ class XPathExtractor {
         Transformer transformer = TransformerFactory.newInstance().newTransformer()
         XMLReader reader = getXmlReader()
         DOMResult result = new DOMResult()
-        transformer.transform(new SAXSource(reader, 
-            new InputSource(new ByteArrayInputStream(string.bytes))), result)
+        InputSource source = new InputSource(new StringReader(string))
+        transformer.transform(new SAXSource(reader, source), result)
         return result.node
     }
     

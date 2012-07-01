@@ -154,18 +154,16 @@ class XPathExtractorTests {
                 </entry>
             </feed>'''
         
-        def forEach = "/atom:feed/atom:entry"
-        def xpaths = ["title": "atom:title[type='text']", 
-            "author": "atom:author/atom:name", 
-            "published": "atom:published", 
-            "content": "atom:content"]
-        def namespaces = ["atom": "http://www.w3.org/2005/Atom"]
+        def xpaths = ["title": "title", 
+            "author": "../author/name", 
+            "updated": "updated", 
+            "content": "summary"]
         
-        XPathExtractor extractor = new XPathExtractor(forEach: forEach, fieldMappings: xpaths, namespaces: namespaces)
-        def actuals = extractor.extract(feed)
-        
-        assertEquals "Wrong number of entries extracted", 2, actuals.size()
-        // TODO: add more assertions
+        doExtract(feed, "/feed/entry", null, xpaths) { List<Map> extracted ->
+            println extracted
+            assertEquals "Wrong number of entries extracted", 2, extracted.size()
+            // TODO: add more assertions
+        }
     }
     
     /**
@@ -174,23 +172,38 @@ class XPathExtractorTests {
      */
     @Test
     public void textExtractsHtml() throws Exception {
-        def namespaces = ["html": "http://www.w3.org/1999/xhtml"]
-        def forEach = "//html:p"
-        def xpaths = ["content": "text()"]
         
-        def extractor = new XPathExtractor(namespaces: namespaces,
+        URL resource = this.class.getResource("/extreme.html")
+
+        Map<String, String> namespaces = ["h": "http://www.w3.org/1999/xhtml"]
+        Map<String, String> xpaths = ["content": "//h:p/text()"]
+
+        doExtract(resource.text, "/", namespaces, xpaths) { List<Map> extracted ->
+            assertEquals("Incorrect # of extracted field sets", 1, extracted.size())
+            assertEquals("Incorrect extracted text", '''ABC  xyz
+QRS''', extracted.get(0).get("content")) // raw content is ugly so content is too
+        }
+        
+        doExtract(resource.text, "/", null, ["content": "//p/text()"]) { List<Map> extracted ->
+            assertEquals("Incorrect # of extracted field sets", 1, extracted.size())
+            assertEquals("Incorrect extracted text", '''ABC  xyz
+QRS''', extracted.get(0).get("content"))
+        }
+    }
+    
+    void doExtract(String text, 
+        String forEach,
+        Map<String, String> ns,
+        Map<String, String> xpaths, 
+        Closure doAssertions) {
+        
+        XPathExtractor extractor = new XPathExtractor(namespaces: ns,
             forEach: forEach, fieldMappings: xpaths,
             xmlReaderClazz: "org.ccil.cowan.tagsoup.Parser")
         
-        StringWriter transformed = new StringWriter()
+        List<Map<String, List<String, String>>> extracted = extractor.extract(text)
         
-        URL resource = this.class.getResource("/extreme.html")
-        def extracted = extractor.extract(resource.text)
-        
-        assertEquals("Incorrect # of extracted field sets", 1, extracted.size())
-        assertEquals("Incorrect extracted text", '''ABC  xyz
-QRS''', 
-            extracted.get(0).get("content"))
+        doAssertions(extracted)
     }
     
 }

@@ -21,39 +21,39 @@ class XPathExtractor {
      * be iterated over.  If the document doesn't have a collection then just
      * set this "/". 
      */
-    def forEach = "/"
+    String forEach = "/"
     
     /**
      * Required - map/table of fields and the XPath expressions that will be
      * used to populate them.
      */
-    def fieldMappings = [:]
+    Map<String, String> fieldMappings = [:]
     
     /**
      * Optional - if your document tags are namespace'd then define them in this
      * map.
      */
-    def namespaces = [:]
+    Map<String, String> namespaces
     
     /**
      * A list of components that massage the input prior to extraction.
      */
-    def preprocessors = []
+    List<String> preprocessors
     
     /**
      * An implementation of XMLReader that may be specified if you don't want to
      * use the built-in JRE impl.
      */
-    def xmlReaderClazz
+    String xmlReaderClazz
     
     /**
      * Extracts a list of maps, populated based on fieldMapping rules and such.
-     * @param string
+     * @param input Well- or mal-formed markup
      * @return
      */
-    List extract(input) {
+    List<Map<String, List<String>>> extract(String input) {
         
-        def extracts = []
+        List<Map<String, List<String>>> extracts = []
         
         JXPathContext rootContext = JXPathContext.newContext(toDom(input))
 
@@ -66,7 +66,7 @@ class XPathExtractor {
                 rootContext, pointer.getNode())
             xpath.setLenient(true)
             
-            def extract = [:]
+            Map<String,List<String>> extract = [:]
             fieldMappings.each { field, xPathExpr ->
                 extract.put(field, 
                     xpath.iterate(xPathExpr)?.toList()?.join(' ')?.trim())
@@ -75,36 +75,47 @@ class XPathExtractor {
             extracts << extract
         }
     
-        extracts
+        return extracts
     }
     
+    TransformerFactory transformerFactory = TransformerFactory.newInstance()
+
     /**
      * Generate a DOM object graph from the supplied xml.
      * @param string The string of hopefully well-formed xml.
      * @return The top-level DOM node.
      */
     org.w3c.dom.Node toDom(string) {
-        Transformer transformer = TransformerFactory.newInstance().newTransformer()
+        Transformer transformer = transformerFactory.newTransformer()
         XMLReader reader = getXmlReader()
         DOMResult result = new DOMResult()
         InputSource source = new InputSource(new StringReader(string))
         transformer.transform(new SAXSource(reader, source), result)
-        return result.node
+        return result.getNode()
     }
-    
+
+    SAXParserFactory saxParserFactory = SAXParserFactory.newInstance()
+            
     /**
      * Get an XMLReader impl, using the JRE built-in if xmlReaderClazz is not set. 
      * @return An XMLReader
      */
     XMLReader getXmlReader() {
+        XMLReader reader = null
         if (xmlReaderClazz) {
-            return Class.forName(xmlReaderClazz).newInstance()
+            reader = Class.forName(xmlReaderClazz).newInstance()
         } else {
-            SAXParserFactory saxParserFactory = SAXParserFactory.newInstance()
-            saxParserFactory.setNamespaceAware(true)
-            saxParserFactory.setValidating(false)
-            return saxParserFactory.newSAXParser().getXMLReader()
+            reader = saxParserFactory.newSAXParser().getXMLReader()
         }
+        reader.setFeature("http://xml.org/sax/features/validation", false)
+        if (namespaces) {
+            reader.setFeature("http://xml.org/sax/features/namespaces", true)
+            reader.setFeature("http://xml.org/sax/features/namespace-prefixes", true)
+        } else {
+            reader.setFeature("http://xml.org/sax/features/namespaces", false)
+            reader.setFeature("http://xml.org/sax/features/namespace-prefixes", false)
+        }
+        return reader
     }
     
 }

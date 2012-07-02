@@ -12,22 +12,27 @@ class XPathExtractorTests {
     @Test
     void testExtract() {
         
-        def xml = '''<Inventory>
-            <Book year="2000">
-                <Title>Snow Crash</Title>
-                <Author>Neal Stephenson</Author>
-                <Publisher>Spectra</Publisher>
-                <ISBN>0553380958</ISBN>
-                <Price>14.95</Price>
-            </Book>
-        </Inventory>'''
-        
-        def forEach = "/Inventory/Book"
-        def xpaths = ["title": "Title", 
-            "author": "Author",
-            "isbn": "ISBN",
-            "published": "@year",
-            "content": "descendant::text()"]
+        def xml = '''<!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Sample Page</title>
+                    <meta name="author" content="Hege Refsnes" />
+                    <meta name="revised" content="2010/06/20" />
+                </head>
+                <body>
+                    <p>By eight o'clock Passepartout had packed the modest carpet-bag.</p>
+                    <p>Mr. Fogg was quite ready.</p>
+                    <p>"You have forgotten nothing?" asked he.</p>
+                    <a href="http://www.w3schools.com">This is a link</a>
+                </body>
+            </html>'''
+
+        def forEach = "/html"
+        def xpaths = ["author": "head/meta[@name='author']/@content", 
+            "title": "head/title",
+            "published": "head/meta[@name='revised']/@content",
+            "links": "//@href",
+            "text": "body//text()"]
         
         XPathExtractor extractor = new XPathExtractor(
             forEach: forEach, fieldMappings: xpaths)
@@ -37,17 +42,20 @@ class XPathExtractorTests {
         
         def actual = actuals.get(0)
         
-        def expected = ["title": "Snow Crash", 
-            "author": "Neal Stephenson", 
-            "isbn": "0553380958", 
-            "content": ["Snow Crash", "Neal Stephenson", "0553380958", "14.95"]]
+        def expected = ["title": "Sample Page", 
+            "author": "Hege Refsnes", 
+            "published": "2010/06/20",
+            "text": ["By eight o'clock Passepartout had packed the modest carpet-bag.", 
+                "Mr. Fogg was quite ready.",
+                "\"You have forgotten nothing?\" asked he.",
+                "This is a link"]]
         
         assertEquals "Invalid title: ${actual}", expected.title, actual.title
         assertEquals "Invalid author: ${actual}", expected.author, actual.author
         assertEquals "Invalid isbn: ${actual}", expected.isbn, actual.isbn
         
-        expected.content.each { bit ->
-            assertTrue "Invalid text: ${actual}", actual.content.contains(bit)
+        expected.text.each { bit ->
+            assertTrue "Invalid text: ${actual}", actual.text.contains(bit)
         }
     }
     

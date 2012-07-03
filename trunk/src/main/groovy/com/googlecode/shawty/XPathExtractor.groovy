@@ -38,7 +38,7 @@ class XPathExtractor {
     /**
      * A list of components that massage the input prior to extraction.
      */
-    List<String> preprocessors
+    List<Preprocessor> preprocessors = []
     
     /**
      * An implementation of XMLReader that may be specified if you don't want to
@@ -52,7 +52,11 @@ class XPathExtractor {
      * @return
      */
     List<Map<String, List<String>>> extract(String input) {
-        
+
+        preprocessors.each { pre ->
+            input = pre.process(input)
+        }
+                
         List<Map<String, List<String>>> extracts = []
         
         JXPathContext rootContext = JXPathContext.newContext(toDom(input))

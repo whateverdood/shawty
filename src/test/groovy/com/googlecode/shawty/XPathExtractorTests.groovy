@@ -12,12 +12,11 @@ class XPathExtractorTests {
     @Test
     void testExtract() {
         
-        def xml = '''<!DOCTYPE html>
-            <html>
+        def xml = '''<html>
                 <head>
                     <title>Sample Page</title>
-                    <meta name="author" content="Hege Refsnes" />
-                    <meta name="revised" content="2010/06/20" />
+                    <meta content="Hege Refsnes" name="author">
+                    <meta content="2010/06/20" name="revised">
                 </head>
                 <body>
                     <p>By eight o'clock Passepartout had packed the modest carpet-bag.</p>
@@ -35,7 +34,8 @@ class XPathExtractorTests {
             "text": "body//text()"]
         
         XPathExtractor extractor = new XPathExtractor(
-            forEach: forEach, fieldMappings: xpaths)
+            forEach: forEach, fieldMappings: xpaths, 
+            xmlReaderClazz: "org.ccil.cowan.tagsoup.Parser")
         def actuals = extractor.extract(xml)
         
         assertEquals "One set of fields should have been parsed out.", 1, actuals.size()

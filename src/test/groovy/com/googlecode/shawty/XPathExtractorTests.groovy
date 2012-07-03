@@ -45,6 +45,8 @@ class XPathExtractorTests {
          *           "h" : "http://www.w3.org/1999/xhtml"]
          * extractor.setNamespaces(ns)
          * -snip-
+         * Don't forget to add the 'h:' prefix to all the nodes in your XPaths
+         * if you use namespaces. *SIGH*
          */
         Preprocessor fixGPlusOnes = new Preprocessor() {
             String process(String s) {

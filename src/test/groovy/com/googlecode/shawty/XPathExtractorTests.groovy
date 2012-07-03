@@ -23,6 +23,7 @@ class XPathExtractorTests {
                     <p>Mr. Fogg was quite ready.</p>
                     <p>"You have forgotten nothing?" asked he.</p>
                     <a href="http://www.w3schools.com">This is a link</a>
+                    <g:plusone href="#grrr"></g:plusone>
                 </body>
             </html>'''
 
@@ -33,9 +34,28 @@ class XPathExtractorTests {
             "links": "//@href",
             "text": "body//text()"]
         
+        /*
+         * Google enabled invalid XHTML by dropping this tag on us.
+         * No one got the memo that they should declare the namespace.
+         * This is a smelly way to handle this problem. If you want to do it
+         * the right way then declare all the namespaces required by this
+         * document, something like this:
+         * -snip-
+         * def ns = ["g" : "http://base.google.com/ns/1.0", 
+         *           "h" : "http://www.w3.org/1999/xhtml"]
+         * extractor.setNamespaces(ns)
+         * -snip-
+         */
+        Preprocessor fixGPlusOnes = new Preprocessor() {
+            String process(String s) {
+                return s.replaceAll("g:plusone", "g-plusone")
+            }
+        }
+        
         XPathExtractor extractor = new XPathExtractor(
             forEach: forEach, fieldMappings: xpaths, 
-            xmlReaderClazz: "org.ccil.cowan.tagsoup.Parser")
+            xmlReaderClazz: "org.ccil.cowan.tagsoup.Parser",
+            preprocessors: Arrays.asList(fixGPlusOnes))
         def actuals = extractor.extract(xml)
         
         assertEquals "One set of fields should have been parsed out.", 1, actuals.size()

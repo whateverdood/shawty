@@ -53,10 +53,6 @@ class XPathExtractor {
      */
     List<Map<String, List<String>>> extract(String input) {
 
-        preprocessors.each { pre ->
-            input = pre.process(input)
-        }
-                
         List<Map<String, List<String>>> extracts = []
         
         JXPathContext rootContext = JXPathContext.newContext(toDom(input))
@@ -89,7 +85,11 @@ class XPathExtractor {
      * @param string The string of hopefully well-formed xml.
      * @return The top-level DOM node.
      */
-    org.w3c.dom.Node toDom(string) {
+    org.w3c.dom.Node toDom(String string) {
+        preprocessors.each { pre ->
+            string = pre.process(string)
+        }
+                
         Transformer transformer = transformerFactory.newTransformer()
         XMLReader reader = getXmlReader()
         DOMResult result = new DOMResult()

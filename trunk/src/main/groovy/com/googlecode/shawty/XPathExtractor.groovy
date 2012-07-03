@@ -38,7 +38,7 @@ class XPathExtractor {
     /**
      * A list of components that massage the input prior to extraction.
      */
-    List<Preprocessor> preprocessors = []
+    List<Preprocessor> preprocessors
     
     /**
      * An implementation of XMLReader that may be specified if you don't want to
@@ -57,7 +57,7 @@ class XPathExtractor {
         
         JXPathContext rootContext = JXPathContext.newContext(toDom(input))
 
-        namespaces.each { prefix, uri -> 
+        namespaces?.each { prefix, uri -> 
             rootContext.registerNamespace(prefix, uri)
         }
         
@@ -86,7 +86,7 @@ class XPathExtractor {
      * @return The top-level DOM node.
      */
     org.w3c.dom.Node toDom(String string) {
-        preprocessors.each { pre ->
+        preprocessors?.each { pre ->
             string = pre.process(string)
         }
                 

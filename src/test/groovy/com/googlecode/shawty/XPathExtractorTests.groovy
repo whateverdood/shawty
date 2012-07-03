@@ -30,7 +30,7 @@ class XPathExtractorTests {
         def forEach = "/html"
         def xpaths = ["author": "head/meta[@name='author']/@content", 
             "title": "head/title",
-            "published": "head/meta[@name='revised']/@content",
+            "date": "head/meta[@name='revised']/@content",
             "links": "//@href",
             "text": "body//text()"]
         
@@ -44,15 +44,15 @@ class XPathExtractorTests {
         
         def expected = ["title": "Sample Page", 
             "author": "Hege Refsnes", 
-            "published": "2010/06/20",
+            "date": "2010/06/20",
             "text": ["By eight o'clock Passepartout had packed the modest carpet-bag.", 
                 "Mr. Fogg was quite ready.",
                 "\"You have forgotten nothing?\" asked he.",
                 "This is a link"]]
         
-        assertEquals "Invalid title: ${actual}", expected.title, actual.title
-        assertEquals "Invalid author: ${actual}", expected.author, actual.author
-        assertEquals "Invalid isbn: ${actual}", expected.isbn, actual.isbn
+        assertEquals "Invalid title: ${actual.title}", expected.title, actual.title
+        assertEquals "Invalid author: ${actual.author}", expected.author, actual.author
+        assertEquals "Invalid date: ${actual.date}", expected.date, actual.date
         
         expected.text.each { bit ->
             assertTrue "Invalid text: ${actual}", actual.text.contains(bit)
